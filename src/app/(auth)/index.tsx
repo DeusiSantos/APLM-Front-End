@@ -1,43 +1,50 @@
 import { Alert, Button, StyleSheet, Text, TextInput, Touchable, TouchableOpacity, View } from "react-native";
-import Logo from "../components/Logo";
+import Logo from "../../components/Logo";
 import { useState } from "react";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
+import api from "../../services/api";
+import { useAuth } from "../../services/AuthContext";
 
 
-const SignUp = () => {
-    const [nome, setNome] = useState('')
+
+const Login = () => {
     const [email, setEmail] = useState('')
     const [senha, setSenha] = useState('')
+    const [loading, setLoading] = useState(false);
+    const router = useRouter();
+    const { login } = useAuth();
 
-    const handleSignUp = () => {
-        Alert.alert(`conta criada com Sucesso: ${nome}`)
-    }
+
+    const handleLogin = async () => {
+        if (!email || !senha) {
+            Alert.alert("Erro", "Por favor, preencha todos os campos");
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            await login(email, senha);
+            router.push('/Home');
+        } catch (error: any) {
+            Alert.alert("Erro", error.message || "Erro ao fazer login");
+        } finally {
+            setLoading(false);
+        }
+    };
+
 
     return (
 
         <View style={style.container}>
             <View>
                 <Logo />
-                <Text style={[style.textWelcome]}>Crie Uma Conta Agora!</Text>
+                <Text style={[style.textWelcome]}>Bem-vindo de volta!</Text>
             </View>
 
             <View style={[style.inputContainer, style.LittleMarginTop]}>
                 <TextInput
                     style={style.input}
-                    placeholder="Nome:"
-                    placeholderTextColor="#666"
-                    value={nome}
-                    onChangeText={setNome}
-                    autoCapitalize="none"
-
-                />
-            </View>
-
-            <View style={[style.inputContainer]}>
-
-
-                <TextInput
-                    style={[style.input]}
                     placeholder="Email:"
                     placeholderTextColor="#666"
                     value={email}
@@ -59,15 +66,33 @@ const SignUp = () => {
                 />
             </View>
 
-            <TouchableOpacity style={[style.buttonEntrar,]} onPress={handleSignUp}>
-                <Text style={style.loginButtonText}>Criar Conta</Text>
+            <TouchableOpacity
+                style={[style.buttonEntrar, loading && style.buttonDisabled]}
+                onPress={handleLogin}
+                disabled={loading}
+            >
+                <Text style={style.loginButtonText}>
+                    {loading ? 'Carregando...' : 'Entrar'}
+                </Text>
             </TouchableOpacity>
 
-              
-            <Link href={'/'} style={style.esqueceuAsenha}>
-                    <Text style={style.esqueceuAsenhaText}>Já tem uma conta ? Iniciar Sessão</Text>
-            </Link>
-                
+            <TouchableOpacity style={[style.esqueceuAsenha]}>
+                <Text style={style.esqueceuAsenhaText}>Esqueceu a senha?</Text>
+            </TouchableOpacity>
+
+
+            <View style={style.lineWithText}>
+                <View style={style.line} />
+                <Text style={style.lineText}>OU</Text>
+                <View style={style.line} />
+            </View>
+
+
+
+
+            <TouchableOpacity style={[style.buttonCriar]} >
+                <Link href={"/SignUp"} style={style.with}>  <Text style={style.CriarButtonText}>Criar Conta</Text> </Link>
+            </TouchableOpacity>
 
         </View>
     )
@@ -75,7 +100,15 @@ const SignUp = () => {
 
 const style = StyleSheet.create({
     LittleMarginTop: { marginTop: 25 },
-    LittleMarginBottom: { marginBottom: 25 },
+    with: {
+        width: '100%',
+        height: 'auto',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        textAlign: 'center'
+    },
+
     container: {
         flex: 1,
         backgroundColor: '#fff',
@@ -83,6 +116,7 @@ const style = StyleSheet.create({
         justifyContent: 'center',
         padding: 16
     },
+
     inputContainer: {
         width: '100%',
         marginBottom: 15,
@@ -158,16 +192,21 @@ const style = StyleSheet.create({
         borderRadius: 10
     },
     CriarButtonText: {
+        width: '100%',
         textAlign: 'center',
         color: '#fff',
         fontWeight: '700',
         fontSize: 18
 
     },
+    buttonDisabled: {
+        backgroundColor: '#CCCCCC',
+        opacity: 0.7
+    }
 
 
 
 
 })
 
-export default SignUp;
+export default Login;
